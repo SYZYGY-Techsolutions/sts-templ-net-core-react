@@ -1,0 +1,32 @@
+name: trivy-scan-example-dotnet.yml
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Load HTML Template file
+        run: |
+          curl https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl > html.tpl
+      - name: Run Trivy vulnerability scanner in repo mode
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scanners: 'vuln,secret,license,misconfig'
+          format: 'template'
+          template: '@/github/workspace/html.tpl'
+          output: './trivy-scan.html'
+          severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+          list-all-pkgs: true
+      - name: Upload Trivy scan results to GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-scan
+          path: './trivy-scan.html'
